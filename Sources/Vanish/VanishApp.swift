@@ -51,6 +51,31 @@ enum LeftoverScanner {
     }
 }
 
+// MARK: - Privileged removal
+
+enum Admin {
+    // Builds: do shell script "rm -rf " & quoted form of "<path>" & ... with administrator privileges
+    // `quoted form of` handles shell escaping; we only escape for the AppleScript string literal.
+    static func removeScript(for paths: [String]) -> String {
+        let quoted = paths.map { p in
+            "quoted form of \"" + p
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "\"", with: "\\\"") + "\""
+        }.joined(separator: " & \" \" & ")
+        return "do shell script \"rm -rf \" & " + quoted + " with administrator privileges"
+    }
+
+    /// Removes with an admin-password prompt. Returns an error message, or nil on success/cancel.
+    /// ponytail: osascript-style escalation instead of a SMJobBless helper; revisit only if Apple kills this API
+    static func remove(_ urls: [URL]) -> String? {
+        var error: NSDictionary?
+        NSAppleScript(source: removeScript(for: urls.map(\.path)))?.executeAndReturnError(&error)
+        guard let error else { return nil }
+        if error[NSAppleScript.errorNumber] as? Int == -128 { return nil } // user cancelled
+        return error[NSAppleScript.errorMessage] as? String ?? "Administrator removal failed."
+    }
+}
+
 // MARK: - UI
 
 struct ContentView: View {
@@ -59,6 +84,7 @@ struct ContentView: View {
     @State private var selected: Set<URL> = []
     @State private var targeted = false
     @State private var confirming = false
+    @State private var errorMessage: String?
 
     var body: some View {
         VStack(spacing: 12) {
@@ -117,6 +143,12 @@ struct ContentView: View {
         } message: {
             Text("Everything goes to the Trash — you can put it back if you change your mind.")
         }
+        .alert(
+            "Some items could not be removed",
+            isPresented: Binding(get: { errorMessage != nil }, set: { _ in errorMessage = nil })
+        ) {} message: {
+            Text(errorMessage ?? "")
+        }
     }
 
     private var selectedSize: Int64 {
@@ -147,8 +179,13 @@ struct ContentView: View {
 
     private func vanish() {
         let fm = FileManager.default
+        var needAdmin: [URL] = []
         for url in selected {
-            try? fm.trashItem(at: url, resultingItemURL: nil)
+            do { try fm.trashItem(at: url, resultingItemURL: nil) }
+            catch { needAdmin.append(url) }
+        }
+        if !needAdmin.isEmpty {
+            errorMessage = Admin.remove(needAdmin)
         }
         reset()
     }

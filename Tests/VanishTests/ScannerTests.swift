@@ -11,6 +11,11 @@ import Testing
     #expect(!LeftoverScanner.matches("MyAppointments", bundleID: "com.example.myapp", appName: "MyApp"))
 }
 
+@Test func adminScriptQuoting() {
+    let script = Admin.removeScript(for: ["/Applications/My \"Weird\" App.app", "/tmp/plain"])
+    #expect(script == "do shell script \"rm -rf \" & quoted form of \"/Applications/My \\\"Weird\\\" App.app\" & \" \" & quoted form of \"/tmp/plain\" with administrator privileges")
+}
+
 @Test func scanFindsLeftovers() throws {
     let fm = FileManager.default
     let tmp = fm.temporaryDirectory.appendingPathComponent("zaptest-\(UUID().uuidString)")
