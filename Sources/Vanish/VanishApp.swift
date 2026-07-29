@@ -83,7 +83,7 @@ struct ContentView: View {
                     Spacer()
                     Text(ByteCountFormatter.string(fromByteCount: selectedSize, countStyle: .file))
                         .foregroundStyle(.secondary)
-                    Button("Zap \(selected.count) item\(selected.count == 1 ? "" : "s")") {
+                    Button("Vanish \(selected.count) item\(selected.count == 1 ? "" : "s")") {
                         confirming = true
                     }
                     .buttonStyle(.borderedProminent)
@@ -95,7 +95,7 @@ struct ContentView: View {
                     Image(systemName: "bolt.trianglebadge.exclamationmark")
                         .font(.system(size: 48))
                         .foregroundStyle(targeted ? .yellow : .secondary)
-                    Text("Drop an app here to zap it")
+                    Text("Drop an app here to make it vanish")
                         .font(.title3).foregroundStyle(.secondary)
                     Button("Choose App…") { chooseApp() }
                 }
@@ -113,7 +113,7 @@ struct ContentView: View {
             "Move \(selected.count) item\(selected.count == 1 ? "" : "s") to the Trash?",
             isPresented: $confirming
         ) {
-            Button("Zap!", role: .destructive) { zap() }
+            Button("Vanish!", role: .destructive) { vanish() }
         } message: {
             Text("Everything goes to the Trash — you can put it back if you change your mind.")
         }
@@ -145,7 +145,7 @@ struct ContentView: View {
         if panel.runModal() == .OK, let url = panel.url { load(url) }
     }
 
-    private func zap() {
+    private func vanish() {
         let fm = FileManager.default
         for url in selected {
             try? fm.trashItem(at: url, resultingItemURL: nil)

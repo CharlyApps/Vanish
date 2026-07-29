@@ -15,7 +15,7 @@ Vanish cleans up all of it.
    LaunchAgents, Logs, WebKit data, and more.
 3. Everything found is listed with its size, pre-selected. Untick anything
    you want to keep.
-4. Hit **Zap** — the app and the selected leftovers move to the Trash.
+4. Hit **Vanish** — the app and the selected leftovers move to the Trash.
 
 Nothing is permanently deleted: everything goes to the Trash, so you can
 always put it back.
